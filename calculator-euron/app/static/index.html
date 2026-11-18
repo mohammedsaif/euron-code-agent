@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #121212;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+  }
+  .app {
+    display: flex;
+    gap: 1.5rem;
+    max-width: 720px;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  /* --- Calculator panel --- */
+  .calc {
+    flex: 1 1 320px;
+    max-width: 400px;
+    background: #1e1e1e;
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,.4);
+  }
+  .display {
+    width: 100%;
+    background: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 1.5rem;
+    padding: .75rem 1rem;
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    margin-bottom: .5rem;
+    min-height: 2.6rem;
+  }
+  .display:focus { outline: 2px solid #4fc3f7; }
+  #error-banner {
+    min-height: 1.4rem;
+    color: #ef5350;
+    font-size: .85rem;
+    margin-bottom: .5rem;
+    text-align: center;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .5rem;
+  }
+  button {
+    background: #333;
+    color: #e0e0e0;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.15rem;
+    padding: .75rem 0;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  button:hover { background: #444; }
+  button:active { background: #555; }
+  button.op { background: #1565c0; }
+  button.op:hover { background: #1976d2; }
+  button.eq { background: #2e7d32; }
+  button.eq:hover { background: #388e3c; }
+  button.cls { background: #c62828; }
+  button.cls:hover { background: #d32f2f; }
+
+  /* --- History panel --- */
+  .history {
+    flex: 1 1 240px;
+    max-width: 300px;
+    background: #1e1e1e;
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,.4);
+    max-height: 480px;
+    overflow-y: auto;
+  }
+  .history h2 {
+    font-size: 1rem;
+    margin-bottom: .75rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: .5rem;
+    color: #90a4ae;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .history .entry {
+    font-size: .85rem;
+    margin-bottom: .6rem;
+    padding: .4rem .6rem;
+    background: #2a2a2a;
+    border-radius: 6px;
+    word-break: break-all;
+    font-family: 'Courier New', monospace;
+  }
+  .history .expr { color: #90caf9; }
+  .history .result { color: #fff; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="calc">
+    <input class="display" id="display" type="text" value="" readonly>
+    <div id="error-banner"></div>
+    <div class="grid">
+      <button class="cls" data-v="C">C</button>
+      <button class="op"  data-v="⌫">⌫</button>
+      <button class="op"  data-v="("> (</button>
+      <button class="op"  data-v=")"> )</button>
+
+      <button data-v="7">7</button>
+      <button data-v="8">8</button>
+      <button data-v="9">9</button>
+      <button class="op" data-v="*">*</button>
+
+      <button data-v="4">4</button>
+      <button data-v="5">5</button>
+      <button data-v="6">6</button>
+      <button class="op" data-v="-">-</button>
+
+      <button data-v="1">1</button>
+      <button data-v="2">2</button>
+      <button data-v="3">3</button>
+      <button class="op" data-v="+">+</button>
+
+      <button data-v="0">0</button>
+      <button data-v=".">.</button>
+      <button class="eq"  data-v="=">=</button>
+      <button class="op" data-v="^">^</button>
+    </div>
+  </div>
+
+  <div class="history">
+    <h2>History</h2>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<script>
+const display = document.getElementById('display');
+const banner  = document.getElementById('error-banner');
+const histEl  = document.getElementById('history-list');
+
+function showError(msg) { banner.textContent = msg || ''; }
+
+async function calculate() {
+  const expr = display.value.trim();
+  if (!expr) return;
+  showError('');
+  try {
+    const resp = await fetch('/calculate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expression: expr })
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      display.value = String(data.result);
+      loadHistory();
+    } else if (resp.status === 400 || resp.status === 422) {
+      const data = await resp.json().catch(() => ({}));
+      showError(data.detail || 'Invalid expression');
+    } else {
+      showError('Server error (' + resp.status + ')');
+    }
+  } catch (e) {
+    showError('API not reachable');
+  }
+}
+
+async function loadHistory() {
+  try {
+    const resp = await fetch('/history');
+    if (!resp.ok) return;
+    const entries = await resp.json();
+    histEl.innerHTML = '';
+    for (const e of entries) {
+      const div = document.createElement('div');
+      div.className = 'entry';
+      div.innerHTML = '<span class="expr">' + esc(e.expression) +
+                      '</span> = <span class="result">' + esc(String(e.result)) + '</span>';
+      histEl.appendChild(div);
+    }
+  } catch (e) { /* silent – no connection */ }
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// Button clicks
+document.querySelector('.grid').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const v = btn.dataset.v;
+
+  if (v === '=') return calculate();
+
+  if (v === 'C') {
+    display.value = '';
+    showError('');
+    return;
+  }
+
+  if (v === '⌫') {
+    display.value = display.value.slice(0, -1);
+    return;
+  }
+
+  if (v === '^') {
+    display.value += '**';
+    return;
+  }
+
+  display.value += v;
+});
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter')   return (e.preventDefault(), calculate());
+  if (e.key === 'Escape')  { display.value = ''; showError(''); return; }
+  if (e.key === 'Backspace'){ display.value = display.value.slice(0,-1); return; }
+
+  const allowed = '0123456789.+-*/()';
+  if (allowed.includes(e.key)) {
+    e.preventDefault();
+    display.value += e.key;
+  }
+});
+
+// Initial load
+loadHistory();
+</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+/* Adapted from LucioFex/Simple-Web-Calculator (MIT) */
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    font-family: "Helvetica", "Arial", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+#calculator {
+    width: 360px;
+    background: linear-gradient(145deg, #1e2a3a, #2a3a4e);
+    border-radius: 20px;
+    box-shadow: 8px 8px 20px rgba(0,0,0,0.5);
+    padding: 20px;
+}
+
+#calculator-interface {
+    width: 100%;
+}
+
+#calculator-screen {
+    background: linear-gradient(135deg, #0f1a2e, #1a2a3e);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
+    overflow: hidden;
+}
+
+#screen-top-display {
+    color: #7a8a9e;
+    font-size: 14px;
+    min-height: 18px;
+    word-break: break-all;
+}
+
+#screen-bottom-display {
+    color: #e0e0e0;
+    font-size: 36px;
+    word-break: break-all;
+}
+
+#functional-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+#functional-container .button {
+    flex: 1;
+    height: 50px;
+    background: #2a3a5e;
+    border: 2px solid #3e568a;
+    color: #8ab4f8;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#functional-container .button:hover {
+    background: #3a4a6e;
+}
+
+#functional-container .button:active {
+    background: #182a53;
+}
+
+#nums-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.numbers-line {
+    display: flex;
+    gap: 8px;
+}
+
+#nums-container .button {
+    flex: 1;
+    height: 50px;
+    background: #1e3050;
+    color: #e0e0e0;
+    font-size: 20px;
+    font-weight: bold;
+    border: 2px solid #2a4a6a;
+}
+
+#nums-container .button:hover {
+    background: #2a4060;
+}
+
+#nums-container .button:active {
+    background: #1c385e;
+}
+
+#arithmetic-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#arithmetic-container .button {
+    height: 50px;
+    background: #3a5a8e;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: bold;
+    border: 2px solid #4a6a9e;
+}
+
+#arithmetic-container .button:hover {
+    background: #4a6aae;
+}
+
+#arithmetic-container .button:active {
+    background: #273e61;
+}
+
+#arithmetic-container #equal {
+    background: #2a7a4e;
+    border-color: #3a8a5e;
+}
+
+#arithmetic-container #equal:hover {
+    background: #3a8a5e;
+}
+
+#arithmetic-container #equal:active {
+    background: #1e5a3e;
+}
+
+.button {
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+    user-select: none;
+}
+
+.button:hover {
+    transform: scale(1.05);
+}
